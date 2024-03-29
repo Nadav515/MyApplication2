@@ -96,5 +96,5 @@ public class DBHelper extends SQLiteOpenHelper {
 
         return intake_id;
     }
-    // Note: Don't forget to close database connection db.close();
+
 }

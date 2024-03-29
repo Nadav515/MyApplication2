@@ -1,5 +1,5 @@
 package com.example.myapplication;
-// This Java class represents the user entity in your application.
+// This Java class represents the user entity in the application.
 // It typically contains properties like username, weight, height,
 // and methods related to the user, such as calculating the BMI
 // (Body Mass Index) based on the user's weight and height.
