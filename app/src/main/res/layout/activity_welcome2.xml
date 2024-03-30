@@ -11,7 +11,7 @@
         android:id="@+id/welcomeView2"
         android:layout_width="216dp"
         android:layout_height="103dp"
-        android:layout_marginTop="84dp"
+        android:layout_marginTop="124dp"
         android:text="welcome"
         android:textSize="48sp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -26,7 +26,9 @@
         android:layout_marginTop="100dp"
         android:text="log out"
         android:textSize="34sp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/welcomeView2" />
+        app:layout_constraintTop_toBottomOf="@+id/welcomeView2"
+        app:layout_constraintVertical_bias="0.15" />
 </androidx.constraintlayout.widget.ConstraintLayout>
