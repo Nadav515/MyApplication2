@@ -62,7 +62,6 @@ public class LoginActivity extends AppCompatActivity {
                     if (task.isSuccessful()) {
                         Toast.makeText(LoginActivity.this, "Login Successful!", Toast.LENGTH_SHORT).show();
                         setResult(RESULT_OK);
-                        finish();
                     } else {
                         Toast.makeText(LoginActivity.this, "Wrong Email Or Password!", Toast.LENGTH_SHORT).show();
                     }
