@@ -57,9 +57,10 @@ public class MainActivity extends AppCompatActivity {
     FirebaseAuth mAuth;
     private WeatherService.OpenWeatherMapService openWeatherMapService;
     private String apiKey = "d2c3e8ab3abfc00f1c05a80e15805c01";
+    MyFirebase fm = new MyFirebase();
 
-    FirebaseDatabase db = FirebaseDatabase.getInstance();
-    DatabaseReference dbUsers = db.getReference("users");
+    FirebaseDatabase db = FirebaseDatabase.getInstance("https://water-app-62925-default-rtdb.europe-west1.firebasedatabase.app/");
+    DatabaseReference dbUsers = fm.getUserRef();
     ActivityResultLauncher<Intent> loginActivityLauncher;
 
     TextView tvBMI, tvTemp;
@@ -90,8 +91,9 @@ public class MainActivity extends AppCompatActivity {
                             public void onDataChange(DataSnapshot dataSnapshot) {
                                 user = dataSnapshot.getValue(User.class);
                                 userId = mAuth.getCurrentUser().getUid();
+                                db.getReference("users/"+userId).setValue(user);
                                 Toast.makeText(MainActivity.this, "`Welcome` " + user.getUsername(), Toast.LENGTH_SHORT).show();
-                                tvBMI.setText("Your BMI: " + user.calculateBMI());
+                                tvBMI.setText("Your BMI: " +(String.valueOf(user.getBmi())) );
                             }
 
                             @Override
@@ -101,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
                         });
                     } else {
                         Toast.makeText(MainActivity.this, "Welcome " + user.getUsername(), Toast.LENGTH_SHORT).show();
-                        tvBMI.setText("Your BMI: " + user.calculateBMI());
+                        tvBMI.setText("Your BMI: " + (String.valueOf(user.getBmi())));
                     }
 
                 });
@@ -117,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
                     user = dataSnapshot.getValue(User.class);
                     userId = mAuth.getCurrentUser().getUid();
                     Toast.makeText(MainActivity.this, "Welcome " + user.getUsername(), Toast.LENGTH_SHORT).show();
-                    tvBMI.setText("Your BMI: " + user.calculateBMI());
+                    tvBMI.setText("Your BMI: " + (String.valueOf(user.getBmi())));
                 }
 
                 @Override

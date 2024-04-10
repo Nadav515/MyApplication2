@@ -78,7 +78,9 @@ public class SignUpActivity extends AppCompatActivity {
                         Toast.makeText(SignUpActivity.this, "Authentication success.",
                                 Toast.LENGTH_SHORT).show();
 
-                        MainActivity.user = createUser(Objects.requireNonNull(task.getResult().getUser()), username, height, weight);
+                        User u = new User(username, height, weight);
+                        MyFirebase f = new MyFirebase();
+                        f.addUser(u);
                         setResult(RESULT_OK);
                         finish();
                     } else {

@@ -9,16 +9,23 @@ public class User {
     private double weight; // in kilograms
     private double height; // in meters
 
+    private double bmi;
+
     // Constructor
     public User(String username, double weight, double height) {
         this.username = username;
         this.weight = weight;
         this.height = height;
+        this.bmi= weight / (height * height);
     }
 
     // BMI Calculation
-    public double calculateBMI() {
-        return weight / (height * height);
+   // public void calculateBMI() {
+   //     this.bmi= weight / (height * height);
+ //   }
+
+    public double getBmi() {
+        return bmi;
     }
 
     // Getters and Setters
