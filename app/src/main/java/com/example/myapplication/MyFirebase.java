@@ -1,5 +1,7 @@
 package com.example.myapplication;
 
+import android.util.Log;
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
@@ -21,13 +23,18 @@ public MyFirebase()
 }
 public DatabaseReference getUserRef()
 {
+    Log.e("XXX", "fauth = " + fAuth);
     currentuser=fAuth.getCurrentUser();
+    Log.e("XXX", "currentuser = " + currentuser);
     ref = db.getReference("user/"+currentuser.getUid());
     return ref;
 }
 public void addUser(User u)
 {
+    Log.e("XXX", "adduser = ");
     currentuser = fAuth.getCurrentUser();
+    Log.e("XXX", "currentuser = " + currentuser);
+
     ref = db.getReference("user/"+currentuser.getUid()); ;
     ref.setValue(u);
 }

@@ -2,6 +2,7 @@ package com.example.myapplication;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -44,15 +45,10 @@ public class SignUpActivity extends AppCompatActivity {
         signUp.setOnClickListener(this :: onClickSignUp);
         tvLogin.setOnClickListener(this :: OnClickLogin);
 
-        signUp.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(SignUpActivity.this, MainActivity.class);
-                startActivity(intent);
-            }
-        });
     }
-    private void onClickSignUp(View v) {
+    private void onClickSignUp(View v)
+    {
+        Log.e("XXX", "line56 signup = " );
         createAccount(email.getText().toString(), password.getText().toString());
     }
 
@@ -69,6 +65,7 @@ public class SignUpActivity extends AppCompatActivity {
         double weight = Double.parseDouble(etWeight.getText().toString());
         if (Objects.equals(email, "") || Objects.equals(password, "") || username.isEmpty()) {
             Toast.makeText(SignUpActivity.this, "Please fill all fields.", Toast.LENGTH_SHORT).show();
+            Log.e("XXX", "line73 signup = " );
             return;
         }
 
@@ -82,8 +79,11 @@ public class SignUpActivity extends AppCompatActivity {
                         MyFirebase f = new MyFirebase();
                         f.addUser(u);
                         setResult(RESULT_OK);
+                        Intent intent = new Intent(SignUpActivity.this, MainActivity.class);
+                        startActivity(intent);
                         finish();
                     } else {
+                        Log.e("XXX", "line 88 signup = " );
                         Toast.makeText(SignUpActivity.this, "Authentication failed.",
                                 Toast.LENGTH_SHORT).show();
                     }
