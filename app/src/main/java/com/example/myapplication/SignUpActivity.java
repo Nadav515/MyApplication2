@@ -65,12 +65,12 @@ public class SignUpActivity extends AppCompatActivity {
         double weight = Double.parseDouble(etWeight.getText().toString());
         if (Objects.equals(email, "") || Objects.equals(password, "") || username.isEmpty()) {
             Toast.makeText(SignUpActivity.this, "Please fill all fields.", Toast.LENGTH_SHORT).show();
-            Log.e("XXX", "line73 signup = " );
             return;
         }
 
         mAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, task -> {
+                .addOnCompleteListener(this, task ->
+                {Log.e("XXX", "line 73 signup = " );
                     if (task.isSuccessful()) {
                         Toast.makeText(SignUpActivity.this, "Authentication success.",
                                 Toast.LENGTH_SHORT).show();
@@ -79,11 +79,12 @@ public class SignUpActivity extends AppCompatActivity {
                         MyFirebase f = new MyFirebase();
                         f.addUser(u);
                         setResult(RESULT_OK);
+                        Log.e("XXX", "line 82 signup = " );
                         Intent intent = new Intent(SignUpActivity.this, MainActivity.class);
                         startActivity(intent);
                         finish();
                     } else {
-                        Log.e("XXX", "line 88 signup = " );
+                        Log.e("XXX", "line 88 signup = " + task.getException());
                         Toast.makeText(SignUpActivity.this, "Authentication failed.",
                                 Toast.LENGTH_SHORT).show();
                     }

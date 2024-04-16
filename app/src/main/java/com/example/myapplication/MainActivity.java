@@ -84,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
 
         loginActivityLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
                 o -> {
+                    Log.e("XXX", "line 87 main = " );
                     if (user == null) {
                         DatabaseReference userDb = dbUsers.child(mAuth.getCurrentUser().getUid());
                         userDb.addValueEventListener(new ValueEventListener() {
@@ -108,7 +109,9 @@ public class MainActivity extends AppCompatActivity {
 
                 });
 
-        if (mAuth.getCurrentUser() == null) {
+        if (mAuth.getCurrentUser() == null)
+        {
+            Log.e("XXX", "line 114 main = " );
             Intent intent = new Intent(MainActivity.this, LoginActivity.class);
             loginActivityLauncher.launch(intent);
         } else {
@@ -117,7 +120,13 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     user = dataSnapshot.getValue(User.class);
+                    if(user==null){
+                        Log.e("XXX", "line 124 main user=null " );
+                        return;
+
+                    }
                     userId = mAuth.getCurrentUser().getUid();
+                    Log.e("XXX", "line 121 main = " + user);
                     Toast.makeText(MainActivity.this, "Welcome " + user.getUsername(), Toast.LENGTH_SHORT).show();
                     tvBMI.setText("Your BMI: " + (String.valueOf(user.getBmi())));
                 }
@@ -131,13 +140,7 @@ public class MainActivity extends AppCompatActivity {
 
         LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
+            Log.e("XXX", "line 138 main = " );
             return;
         }
         Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
@@ -166,6 +169,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<WeatherData> call, Response<WeatherData> response) {
                 if (response.isSuccessful()) {
+                    Log.e("XXX", "line 167 main = " );
                     WeatherData weatherData = response.body();
                     tvTemp.setText(weatherData.temperature + " C");
                 } else {
