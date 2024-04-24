@@ -45,6 +45,12 @@ public class SignUpActivity extends AppCompatActivity {
         signUp.setOnClickListener(this :: onClickSignUp);
         tvLogin.setOnClickListener(this :: OnClickLogin);
 
+        MyFirebase fb = MyFirebase.getInstance();
+        if(fb.getCurrentuser() != null) {
+            finish();
+            startActivity(new Intent(this, MainActivity.class));
+        }
+
     }
     private void onClickSignUp(View v)
     {
@@ -76,7 +82,7 @@ public class SignUpActivity extends AppCompatActivity {
                                 Toast.LENGTH_SHORT).show();
 
                         User u = new User(username, height, weight);
-                        MyFirebase f = new MyFirebase();
+                        MyFirebase f =  MyFirebase.getInstance();
                         f.addUser(u);
                         setResult(RESULT_OK);
                         Log.e("XXX", "line 82 signup = " );

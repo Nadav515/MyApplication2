@@ -2,7 +2,11 @@ package com.example.myapplication;
 
 import static android.content.ContentValues.TAG;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Address;
@@ -11,6 +15,8 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -18,8 +24,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.graphics.Insets;
@@ -39,7 +47,9 @@ import com.google.firebase.database.ValueEventListener;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
+import im.delight.android.location.SimpleLocation;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -51,20 +61,76 @@ import retrofit2.Response;
 // to interact with UI components from activity_main.xml,
 // processing user input, and possibly integrating with DBHelper to save and retrieve data.
 public class MainActivity extends AppCompatActivity {
-
-    public static User user = null;
-    public static String userId = null;
-    FirebaseAuth mAuth;
     private WeatherService.OpenWeatherMapService openWeatherMapService;
     private String apiKey = "d2c3e8ab3abfc00f1c05a80e15805c01";
-    MyFirebase fm = new MyFirebase();
 
-    FirebaseDatabase db = FirebaseDatabase.getInstance("https://water-app-62925-default-rtdb.europe-west1.firebasedatabase.app/");
-    DatabaseReference dbUsers = fm.getUserRef();
-    ActivityResultLauncher<Intent> loginActivityLauncher;
+    MyFirebase fb = MyFirebase.getInstance();
 
     TextView tvBMI, tvTemp;
 
+
+    TextView weatherTev;
+    ValueEventListener listener;
+
+    TextView cupsTv;
+
+    SimpleLocation simpleLocation;
+
+    ActivityResultLauncher<String[]> permissionsLocation =registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), new ActivityResultCallback<Map<String, Boolean>>() {
+        @Override
+        public void onActivityResult(Map<String, Boolean> o) {
+            if(!o.containsValue(false)) {
+                updateWeatherData();
+            }
+        }
+    });
+
+    private void updateWeatherData() {
+        Log.d("updateWeatherData", "Started");
+        simpleLocation.beginUpdates();
+        double lat = simpleLocation.getLatitude();
+        double lng = simpleLocation.getLongitude();
+        openWeatherMapService.getCurrentWeatherData(lat, lng, apiKey)
+                .enqueue(new Callback<WeatherData.WeatherRoot>() {
+                    @SuppressLint("DefaultLocale")
+                    @Override
+                    public void onResponse(Call<WeatherData.WeatherRoot> call, Response<WeatherData.WeatherRoot> response) {
+                       Log.d("getCurrentWeatherData", "OnResponse");
+                        if(response.isSuccessful()) {
+                            WeatherData.WeatherRoot data = response.body();
+                            Log.d("getCurrentWeatherData", String.valueOf(response.code()));
+                            if(data == null) return;
+                            runOnUiThread(() -> {
+                                if(data.main != null) {
+                                    data.main.temp_max -=273.15;
+                                    data.main.temp_min -=273.15;
+                                    double celcius = ((data.main.temp_max + data.main.temp_min)) /2.0f;
+                                    weatherTev.setText(
+                                            String.format("City name: %s, Weather: %.2f,\n %s",
+                                                    data.name, celcius,Weather.detailsForTemp(celcius))
+                                    );
+                                    Log.d("getWeatherData:", data.toString());
+                                }else {
+                                    Log.d("getWeatherData:", data.toString());
+                                }
+                            });
+
+                        }
+                        else {
+                            try {
+                                Log.d("Faulted on request", response.errorBody().string());
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<WeatherData.WeatherRoot> call, Throwable t) {
+                        t.printStackTrace();
+                    }
+                });
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,113 +141,95 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-
-        mAuth = FirebaseAuth.getInstance();
-        openWeatherMapService = ApiClient.getInstance().create(WeatherService.OpenWeatherMapService.class);
+        simpleLocation = new SimpleLocation(this);
+        weatherTev = findViewById(R.id.weathertext);
+        openWeatherMapService = ApiClient.getInstance()
+                .create(WeatherService.OpenWeatherMapService.class);
 
         tvBMI = findViewById(R.id.tvBMI);
         tvTemp = findViewById(R.id.tvTemp);
+        cupsTv = findViewById(R.id.cups);
 
-        loginActivityLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
-                o -> {
-                    Log.e("XXX", "line 87 main = " );
-                    if (user == null) {
-                        DatabaseReference userDb = dbUsers.child(mAuth.getCurrentUser().getUid());
-                        userDb.addValueEventListener(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(DataSnapshot dataSnapshot) {
-                                user = dataSnapshot.getValue(User.class);
-                                userId = mAuth.getCurrentUser().getUid();
-                                db.getReference("users/"+userId).setValue(user);
-                                Toast.makeText(MainActivity.this, "`Welcome` " + user.getUsername(), Toast.LENGTH_SHORT).show();
-                                tvBMI.setText("Your BMI: " +(String.valueOf(user.getBmi())) );
-                            }
+        if(checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED
+            || checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_DENIED) {
 
-                            @Override
-                            public void onCancelled(DatabaseError error) {
-                                Log.w(TAG, "Failed to read value.", error.toException());
-                            }
-                        });
-                    } else {
-                        Toast.makeText(MainActivity.this, "Welcome " + user.getUsername(), Toast.LENGTH_SHORT).show();
-                        tvBMI.setText("Your BMI: " + (String.valueOf(user.getBmi())));
-                    }
+            permissionsLocation.launch(new String[] {
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION
 
-                });
-
-        if (mAuth.getCurrentUser() == null)
-        {
-            Log.e("XXX", "line 114 main = " );
-            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-            loginActivityLauncher.launch(intent);
-        } else {
-            DatabaseReference userDb = dbUsers.child(mAuth.getCurrentUser().getUid());
-            userDb.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    user = dataSnapshot.getValue(User.class);
-                    if(user==null){
-                        Log.e("XXX", "line 124 main user=null " );
-                        return;
-
-                    }
-                    userId = mAuth.getCurrentUser().getUid();
-                    Log.e("XXX", "line 121 main = " + user);
-                    Toast.makeText(MainActivity.this, "Welcome " + user.getUsername(), Toast.LENGTH_SHORT).show();
-                    tvBMI.setText("Your BMI: " + (String.valueOf(user.getBmi())));
-                }
-
-                @Override
-                public void onCancelled(DatabaseError error) {
-                    Log.w(TAG, "Failed to read value.", error.toException());
-                }
             });
+
         }
 
-        LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            Log.e("XXX", "line 138 main = " );
-            return;
+        else {
+            updateWeatherData();
         }
-        Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        double longitude = location.getLongitude();
-        double latitude = location.getLatitude();
-        Geocoder geoCoder = new Geocoder(this, Locale.getDefault()); //it is Geocoder
-        StringBuilder builder = new StringBuilder();
-        try {
-            List<Address> address = geoCoder.getFromLocation(latitude, longitude, 1);
-            int maxLines = address.get(0).getMaxAddressLineIndex();
-            for (int i=0; i<maxLines; i++) {
-                String addressStr = address.get(0).getAddressLine(i);
-                builder.append(addressStr);
-                builder.append(" ");
-            }
 
-            String finalAddress = builder.toString(); //This is the complete address.
-            System.out.println(finalAddress);
-        } catch (IOException e) {}
-        catch (NullPointerException e) {}
-        loadWeatherData("London");
+
     }
 
-    private void loadWeatherData(String location) {
-        openWeatherMapService.getCurrentWeatherData(location, apiKey).enqueue(new Callback<WeatherData>() {
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if(listener != null) {
+            fb.getUserRef().removeEventListener(listener);
+            listener = null;
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if(listener != null) {
+            fb.getUserRef().removeEventListener(listener);
+        }
+        listener = fb.getUserRef().addValueEventListener(new ValueEventListener() {
+            @SuppressLint("DefaultLocale")
             @Override
-            public void onResponse(Call<WeatherData> call, Response<WeatherData> response) {
-                if (response.isSuccessful()) {
-                    Log.e("XXX", "line 167 main = " );
-                    WeatherData weatherData = response.body();
-                    tvTemp.setText(weatherData.temperature + " C");
-                } else {
-                    showErrorToast();
-                }
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                User user = snapshot.getValue(User.class);
+                if(user==null) return;
+                tvBMI.setText(String.format("Your BMI is %.2f", user.getBmi()));
+
+                int cupsToDrink = new BMI().waterCupsFor(user.getBmi());
+                cupsTv.setText(String.format("You need to drink %d cups of water", cupsToDrink));
             }
 
             @Override
-            public void onFailure(Call<WeatherData> call, Throwable t) {
-                showErrorToast();
+            public void onCancelled(@NonNull DatabaseError error) {
+
             }
         });
+    }
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+
+        if(item.getItemId() == R.id.logout) {
+            new AlertDialog.Builder(this)
+                    .setTitle("Water app")
+                    .setMessage("Are you sure you want to logout?")
+                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            FirebaseAuth.getInstance().signOut();
+                            finish();
+                            startActivity(new Intent(MainActivity.this, SignUpActivity.class));
+                        }
+                    })
+                    .setNegativeButton("Cancel",null)
+                    .show();
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void showErrorToast() {

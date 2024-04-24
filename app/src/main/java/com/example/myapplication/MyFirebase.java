@@ -8,14 +8,26 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 public class MyFirebase {
-    private static FirebaseUser currentuser;
-    private static FirebaseAuth fAuth;
-    private static FirebaseDatabase db;
+    private  FirebaseUser currentuser;
+    private  FirebaseAuth fAuth;
+    private  FirebaseDatabase db;
 
-    private static DatabaseReference ref;
+    private  DatabaseReference ref;
+
+    public  FirebaseUser getCurrentuser() {
+        return currentuser;
+    }
 
 
-public MyFirebase()
+    public static MyFirebase instance;
+
+    public static synchronized MyFirebase getInstance() {
+        if(instance == null) {
+            instance = new MyFirebase();
+        }
+        return instance;
+    }
+    private MyFirebase()
 {
     fAuth = FirebaseAuth.getInstance();
     currentuser= fAuth.getCurrentUser();

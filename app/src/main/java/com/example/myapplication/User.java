@@ -16,13 +16,10 @@ public class User {
         this.username = username;
         this.weight = weight;
         this.height = height;
-        this.bmi= weight / (height * height);
+        this.bmi = weight / (height * height);
     }
 
-    // BMI Calculation
-   // public void calculateBMI() {
-   //     this.bmi= weight / (height * height);
- //   }
+    public User() {}
 
     public double getBmi() {
         return bmi;
